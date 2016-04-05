@@ -51,6 +51,8 @@ void AsyncListener(void* sender, VnDeviceCompositeData* data) {
 
 void ImuFilter::initFilter(float sample_freq, float cutoff_freq)
 {
+
+  ROS_INFO("init filters with a sampling frequency of %f and a cutoff of %f\n",sample_freq,cutoff_freq);
   filter_acceleration_x_.set_cutoff_frequency(sample_freq,cutoff_freq);
   filter_acceleration_y_.set_cutoff_frequency(sample_freq,cutoff_freq);
   filter_acceleration_z_.set_cutoff_frequency(sample_freq,cutoff_freq);
