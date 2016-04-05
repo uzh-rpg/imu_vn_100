@@ -264,10 +264,12 @@ void ImuVn100::Initialize() {
 
   // set rotatoion
   VnEnsure(vn100_setReferenceFrameRotation(&imu_, c_, true));
+  VnMatrix3x3 c_query;
+  VnEnsure(vn100_getReferenceFrameRotation(&imu_, &c_query));
   ROS_INFO("Rotation set to:\n %f, %f, %f \n %f, %f, %f\n%f, %f ,%f\n",
-           c_.c00, c_.c01, c_.c02,
-           c_.c10, c_.c11, c_.c12,
-           c_.c20, c_.c21, c_.c22);
+           c_query.c00, c_query.c01, c_query.c02,
+           c_query.c10, c_query.c11, c_query.c12,
+           c_query.c20, c_query.c21, c_query.c22);
 
   CreateDiagnosedPublishers();
 
