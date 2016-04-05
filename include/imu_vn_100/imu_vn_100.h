@@ -119,6 +119,9 @@ public:
 
   void applyImuFilter(const VnDeviceCompositeData& data);
 
+  geometry_msgs::Vector3 getFilteredAccelerationInBodyFrame();
+  geometry_msgs::Vector3 getFilteredGyroInBodyFrame();
+
   void Configure();
 
   struct SyncInfo {
@@ -137,7 +140,6 @@ public:
 
   const SyncInfo sync_info() const { return sync_info_; }
 
-  ImuFilter imuFilter_;
 private:
   ros::NodeHandle pnh_;
   Vn100 imu_;
@@ -154,6 +156,10 @@ private:
   bool enable_pres_ = true;
   bool enable_temp_ = true;
   bool binary_output_ = true;
+
+  ImuFilter imu_filter_;
+  // frame rotation
+  VnMatrix3x3 rotation_body_imu_;
 
   SyncInfo sync_info_;
 

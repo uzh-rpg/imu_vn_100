@@ -35,6 +35,15 @@ void RosQuaternionFromVnQuaternion(geometry_msgs::Quaternion& ros_quat,
 void FillImuMessage(sensor_msgs::Imu& imu_msg,
                     const VnDeviceCompositeData& data, bool binary_output);
 
+geometry_msgs::Vector3 rotateVector(const VnMatrix3x3 rotation_Matrix, const geometry_msgs::Vector3 input_vector)
+{
+  geometry_msgs::Vector3 rotated_vector;
+  rotated_vector.x = rotation_Matrix.c00*input_vector.x + rotation_Matrix.c01*input_vector.y + rotation_Matrix.c02*input_vector.z;
+  rotated_vector.y = rotation_Matrix.c10*input_vector.x + rotation_Matrix.c11*input_vector.y + rotation_Matrix.c12*input_vector.z;
+  rotated_vector.z = rotation_Matrix.c20*input_vector.x + rotation_Matrix.c21*input_vector.y + rotation_Matrix.c22*input_vector.z;
+  return rotated_vector;
+}
+
 void AsyncListener(void* sender, VnDeviceCompositeData* data) {
   imu_vn_100_ptr->applyImuFilter(*data);
   imu_vn_100_ptr->PublishData(*data);
@@ -169,6 +178,16 @@ void ImuVn100::LoadParameters() {
   pnh_.param("binary_output", binary_output_, true);
   pnh_.param("imu_cutoff_frequency", imu_cutoff_freq_, kDefaultCutoff);
 
+  pnh_.param("c00", rotation_body_imu_.c00, 1.0);
+  pnh_.param("c01", rotation_body_imu_.c01, 0.0);
+  pnh_.param("c02", rotation_body_imu_.c02, 0.0);
+  pnh_.param("c10", rotation_body_imu_.c10, 0.0);
+  pnh_.param("c11", rotation_body_imu_.c11, -1.0);
+  pnh_.param("c12", rotation_body_imu_.c12, 0.0);
+  pnh_.param("c20", rotation_body_imu_.c20, 0.0);
+  pnh_.param("c21", rotation_body_imu_.c21, 0.0);
+  pnh_.param("c22", rotation_body_imu_.c22, -1.0);
+
   FixImuRate();
   sync_info_.FixSyncRate();
 }
@@ -194,7 +213,7 @@ void ImuVn100::Initialize() {
   LoadParameters();
 
   // initialize filters
-  imuFilter_.initFilter(imu_rate_,imu_cutoff_freq_);
+  imu_filter_.initFilter(imu_rate_,imu_cutoff_freq_);
 
   ROS_DEBUG("Connecting to device");
   VnEnsure(vn100_connect(&imu_, port_.c_str(), 115200));
@@ -314,8 +333,8 @@ void ImuVn100::Disconnect() {
 }
 
 void ImuVn100::applyImuFilter(const VnDeviceCompositeData& data) {
-  imuFilter_.updateFilterAcceleration(data.accelerationUncompensated.c0,data.accelerationUncompensated.c1,data.accelerationUncompensated.c2);
-  imuFilter_.updatefilterGyro(data.angularRateUncompensated.c0,data.angularRateUncompensated.c1,data.angularRateUncompensated.c2);
+  imu_filter_.updateFilterAcceleration(data.accelerationUncompensated.c0,data.accelerationUncompensated.c1,data.accelerationUncompensated.c2);
+  imu_filter_.updatefilterGyro(data.angularRateUncompensated.c0,data.angularRateUncompensated.c1,data.angularRateUncompensated.c2);
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
@@ -350,6 +369,16 @@ void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
   sync_info_.Update(data.syncInCnt, imu_msg.header.stamp);
 
   updater_.update();
+}
+
+geometry_msgs::Vector3 ImuVn100::getFilteredAccelerationInBodyFrame()
+{
+  return rotateVector(rotation_body_imu_,imu_filter_.getCurrentAccleration());
+}
+
+geometry_msgs::Vector3 ImuVn100::getFilteredGyroInBodyFrame()
+{
+  return rotateVector(rotation_body_imu_,imu_filter_.getCurrentGyro());
 }
 
 void VnEnsure(const VnErrorCode& error_code) {
@@ -402,8 +431,8 @@ void FillImuMessage(sensor_msgs::Imu& imu_msg,
     RosQuaternionFromVnQuaternion(imu_msg.orientation, data.quaternion);
     // NOTE: The IMU angular velocity and linear acceleration outputs are
     // swapped. And also why are they different?
-    imu_msg.linear_acceleration = imu_vn_100_ptr->imuFilter_.getCurrentAccleration();
-    imu_msg.angular_velocity = imu_vn_100_ptr->imuFilter_.getCurrentGyro();
+    imu_msg.linear_acceleration = imu_vn_100_ptr->getFilteredAccelerationInBodyFrame();
+    imu_msg.angular_velocity = imu_vn_100_ptr->getFilteredGyroInBodyFrame();
 
     //RosVector3FromVnVector3(imu_msg.angular_velocity,
     //                        data.accelerationUncompensated);
