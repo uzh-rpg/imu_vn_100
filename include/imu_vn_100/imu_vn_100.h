@@ -126,6 +126,9 @@ class ImuVn100 {
   int acc_filter_mode_;
   int gyro_filter_mode_;
 
+  // frame rotation
+  VnMatrix3x3 c_;
+
   SyncInfo sync_info_;
 
   du::Updater updater_;

@@ -122,6 +122,17 @@ void ImuVn100::LoadParameters() {
   pnh_.param("acc_filter_window_size", acc_filter_window_size_, 4);
   pnh_.param("gyro_filter_window_size", gyro_filter_window_size_, 4);
 
+
+  pnh_.param("c00", c_.c00, 1.0);
+  pnh_.param("c01", c_.c01, 0.0);
+  pnh_.param("c02", c_.c02, 0.0);
+  pnh_.param("c10", c_.c10, 0.0);
+  pnh_.param("c11", c_.c11, -1.0);
+  pnh_.param("c12", c_.c12, 0.0);
+  pnh_.param("c20", c_.c20, 0.0);
+  pnh_.param("c21", c_.c21, 0.0);
+  pnh_.param("c22", c_.c22, -1.0);
+
   FixImuRate();
   sync_info_.FixSyncRate();
 }
@@ -249,6 +260,12 @@ void ImuVn100::Initialize() {
               presFilterMode, true));
   ROS_INFO("IMU filter set!");
 
+  // set rotatoion
+  VnEnsure(vn100_setReferenceFrameRotation(&imu_, c_, true));
+  ROS_INFO("Rotation set to:\n %f, %f, %f \n %f, %f, %f\n%f, %f ,%f\n",
+           c_.c00, c_.c01, c_.c02,
+           c_.c10, c_.c11, c_.c12,
+           c_.c20, c_.c21, c_.c22);
 
   CreateDiagnosedPublishers();
 
