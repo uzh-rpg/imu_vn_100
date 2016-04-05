@@ -229,6 +229,7 @@ void ImuVn100::Initialize() {
   uint8_t tempFilterMode;
   uint8_t presFilterMode;
 
+  // query before
   VnEnsure(vn100_getImuFilteringConfiguration(
               &imu_,
               &magWindowSize,
@@ -241,6 +242,17 @@ void ImuVn100::Initialize() {
               &gyroFilterMode,
               &tempFilterMode,
               &presFilterMode));
+  ROS_INFO("IMU filter settings before: %d, %d, %d, %d, %d, %d %d, %d, %d, %d",
+              magWindowSize,
+              accelWindowSize,
+              gyroWindowSize,
+              tempWindowSize,
+              presWindowSize,
+              magFilterMode,
+              accelFilterMode,
+              gyroFilterMode,
+              tempFilterMode,
+              presFilterMode);
 
   // set filter
   accelFilterMode = static_cast<uint8_t>(acc_filter_mode_);
@@ -260,9 +272,34 @@ void ImuVn100::Initialize() {
               gyroFilterMode,
               tempFilterMode,
               presFilterMode, true));
+
+  // check after
+  VnEnsure(vn100_getImuFilteringConfiguration(
+              &imu_,
+              &magWindowSize,
+              &accelWindowSize,
+              &gyroWindowSize,
+              &tempWindowSize,
+              &presWindowSize,
+              &magFilterMode,
+              &accelFilterMode,
+              &gyroFilterMode,
+              &tempFilterMode,
+              &presFilterMode));
+  ROS_INFO("IMU filter settings before: %d, %d, %d, %d, %d, %d %d, %d, %d, %d",
+              magWindowSize,
+              accelWindowSize,
+              gyroWindowSize,
+              tempWindowSize,
+              presWindowSize,
+              magFilterMode,
+              accelFilterMode,
+              gyroFilterMode,
+              tempFilterMode,
+              presFilterMode);
   ROS_INFO("IMU filter set!");
 
-  // set rotatoion
+  // set rotation
   VnEnsure(vn100_setReferenceFrameRotation(&imu_, c_, true));
   VnMatrix3x3 c_query;
   VnEnsure(vn100_getReferenceFrameRotation(&imu_, &c_query));
