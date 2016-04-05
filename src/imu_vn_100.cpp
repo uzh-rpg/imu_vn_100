@@ -31,7 +31,8 @@ void RosVector3FromVnVector3(geometry_msgs::Vector3& ros_vec3,
 void RosQuaternionFromVnQuaternion(geometry_msgs::Quaternion& ros_quat,
                                    const VnQuaternion& vn_quat);
 void FillImuMessage(sensor_msgs::Imu& imu_msg,
-                    const VnDeviceCompositeData& data, bool binary_output);
+                    const VnDeviceCompositeData& data, bool binary_output,
+                    bool use_compensate = false);
 
 void AsyncListener(void* sender, VnDeviceCompositeData* data) {
   imu_vn_100_ptr->PublishData(*data);
@@ -140,6 +141,7 @@ void ImuVn100::LoadParameters() {
 void ImuVn100::CreateDiagnosedPublishers() {
   imu_rate_double_ = imu_rate_;
   pd_imu_.Create<Imu>(pnh_, "imu", updater_, imu_rate_double_);
+  pd_imu_compen_.Create<Imu>(pnh_, "imu_compen", updater_, imu_rate_double_);
   if (enable_mag_) {
     pd_mag_.Create<MagneticField>(pnh_, "magnetic_field", updater_,
                                   imu_rate_double_);
@@ -333,6 +335,12 @@ void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
   FillImuMessage(imu_msg, data, binary_output_);
   pd_imu_.Publish(imu_msg);
 
+  sensor_msgs::Imu imu_msg_compen;
+  imu_msg_compen.header.stamp = ros::Time::now();
+  imu_msg_compen.header.frame_id = frame_id_;
+  FillImuMessage(imu_msg_compen, data, binary_output_, true);
+  pd_imu_compen_.Publish(imu_msg_compen);
+
   if (enable_mag_) {
     sensor_msgs::MagneticField mag_msg;
     mag_msg.header = imu_msg.header;
@@ -404,15 +412,27 @@ void RosQuaternionFromVnQuaternion(geometry_msgs::Quaternion& ros_quat,
 }
 
 void FillImuMessage(sensor_msgs::Imu& imu_msg,
-                    const VnDeviceCompositeData& data, bool binary_output) {
+                    const VnDeviceCompositeData& data, bool binary_output,
+                    bool use_compensate) {
   if (binary_output) {
     RosQuaternionFromVnQuaternion(imu_msg.orientation, data.quaternion);
     // NOTE: The IMU angular velocity and linear acceleration outputs are
     // swapped. And also why are they different?
-    RosVector3FromVnVector3(imu_msg.angular_velocity,
-                            data.accelerationUncompensated);
-    RosVector3FromVnVector3(imu_msg.linear_acceleration,
-                            data.angularRateUncompensated);
+    if(!use_compensate)
+    {
+      RosVector3FromVnVector3(imu_msg.angular_velocity,
+                              data.accelerationUncompensated);
+      RosVector3FromVnVector3(imu_msg.linear_acceleration,
+                              data.angularRateUncompensated);
+    }
+    else
+    {
+      RosVector3FromVnVector3(imu_msg.angular_velocity,
+                              data.acceleration);
+      RosVector3FromVnVector3(imu_msg.linear_acceleration,
+                              data.angularRate);
+    }
+
   } else {
     RosVector3FromVnVector3(imu_msg.linear_acceleration, data.acceleration);
     RosVector3FromVnVector3(imu_msg.angular_velocity, data.angularRate);

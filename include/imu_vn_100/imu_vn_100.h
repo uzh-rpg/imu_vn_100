@@ -132,7 +132,7 @@ class ImuVn100 {
   SyncInfo sync_info_;
 
   du::Updater updater_;
-  DiagnosedPublisher pd_imu_, pd_mag_, pd_pres_, pd_temp_;
+  DiagnosedPublisher pd_imu_, pd_mag_, pd_pres_, pd_temp_, pd_imu_compen_;
 
   void FixImuRate();
   void LoadParameters();
