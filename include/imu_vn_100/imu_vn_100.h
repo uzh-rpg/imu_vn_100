@@ -96,7 +96,7 @@ public:
   static constexpr int kBaseImuRate = 800;
   static constexpr int kDefaultImuRate = 100;
   static constexpr int kDefaultSyncOutRate = 20;
-  static constexpr float kDefaultCutoff = 30;
+  static constexpr float kDefaultCutoff = 25;
 
   explicit ImuVn100(const ros::NodeHandle& pnh);
   ImuVn100(const ImuVn100&) = delete;
