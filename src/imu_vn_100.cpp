@@ -177,6 +177,7 @@ void ImuVn100::LoadParameters() {
 
   pnh_.param("binary_output", binary_output_, true);
   pnh_.param("imu_cutoff_frequency", imu_cutoff_freq_, kDefaultCutoff);
+  ROS_INFO("Cutoff is set to %f", imu_cutoff_freq_);
 
   pnh_.param("c00", rotation_body_imu_.c00, 1.0);
   pnh_.param("c01", rotation_body_imu_.c01, 0.0);
