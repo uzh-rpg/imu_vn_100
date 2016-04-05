@@ -115,6 +115,13 @@ void ImuVn100::LoadParameters() {
 
   pnh_.param("binary_output", binary_output_, true);
 
+  // load filter parameters
+  pnh_.param("acc_filter_mode", acc_filter_mode_, 3);
+  pnh_.param("gyro_filter_mode", gyro_filter_mode_, 3);
+
+  pnh_.param("acc_filter_window_size", acc_filter_window_size_, 4);
+  pnh_.param("gyro_filter_window_size", gyro_filter_window_size_, 4);
+
   FixImuRate();
   sync_info_.FixSyncRate();
 }
@@ -196,6 +203,52 @@ void ImuVn100::Initialize() {
           true));
     }
   }
+
+  // get default first
+  uint16_t magWindowSize;
+  uint16_t accelWindowSize;
+  uint16_t gyroWindowSize;
+  uint16_t tempWindowSize;
+  uint16_t presWindowSize;
+  uint8_t magFilterMode;
+  uint8_t accelFilterMode;
+  uint8_t gyroFilterMode;
+  uint8_t tempFilterMode;
+  uint8_t presFilterMode;
+
+  VnEnsure(vn100_getImuFilteringConfiguration(
+              &imu_,
+              &magWindowSize,
+              &accelWindowSize,
+              &gyroWindowSize,
+              &tempWindowSize,
+              &presWindowSize,
+              &magFilterMode,
+              &accelFilterMode,
+              &gyroFilterMode,
+              &tempFilterMode,
+              &presFilterMode));
+
+  // set filter
+  accelFilterMode = static_cast<uint8_t>(acc_filter_mode_);
+  gyroFilterMode = static_cast<uint8_t>(gyro_filter_mode_);
+  accelWindowSize = static_cast<uint16_t>(acc_filter_window_size_);
+  gyroWindowSize = static_cast<uint16_t>(acc_filter_window_size_);
+
+  VnEnsure(vn100_setImuFilteringConfiguration(
+              &imu_,
+              magWindowSize,
+              accelWindowSize,
+              gyroWindowSize,
+              tempWindowSize,
+              presWindowSize,
+              magFilterMode,
+              accelFilterMode,
+              gyroFilterMode,
+              tempFilterMode,
+              presFilterMode, true));
+  ROS_INFO("IMU filter set!");
+
 
   CreateDiagnosedPublishers();
 

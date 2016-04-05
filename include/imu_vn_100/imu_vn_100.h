@@ -119,6 +119,13 @@ class ImuVn100 {
   bool enable_temp_ = true;
   bool binary_output_ = true;
 
+  // filter configuration
+  int acc_filter_window_size_;
+  int gyro_filter_window_size_;
+
+  int acc_filter_mode_;
+  int gyro_filter_mode_;
+
   SyncInfo sync_info_;
 
   du::Updater updater_;
