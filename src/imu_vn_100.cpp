@@ -21,6 +21,8 @@ namespace imu_vn_100 {
 // LESS HACK IS STILL HACK
 ImuVn100* imu_vn_100_ptr;
 
+
+
 using sensor_msgs::Imu;
 using sensor_msgs::MagneticField;
 using sensor_msgs::FluidPressure;
@@ -34,12 +36,63 @@ void FillImuMessage(sensor_msgs::Imu& imu_msg,
                     const VnDeviceCompositeData& data, bool binary_output);
 
 void AsyncListener(void* sender, VnDeviceCompositeData* data) {
+  imu_vn_100_ptr->applyImuFilter(*data);
   imu_vn_100_ptr->PublishData(*data);
+}
+
+void ImuFilter::initFilter(float sample_freq, float cutoff_freq)
+{
+  filter_acceleration_x_.set_cutoff_frequency(sample_freq,cutoff_freq);
+  filter_acceleration_y_.set_cutoff_frequency(sample_freq,cutoff_freq);
+  filter_acceleration_z_.set_cutoff_frequency(sample_freq,cutoff_freq);
+  filter_gyro_x_.set_cutoff_frequency(sample_freq,cutoff_freq);
+  filter_gyro_y_.set_cutoff_frequency(sample_freq,cutoff_freq);
+  filter_gyro_z_.set_cutoff_frequency(sample_freq,cutoff_freq);
+
+  filter_acceleration_x_.reset(0.0);
+  filter_acceleration_y_.reset(0.0);
+  filter_acceleration_z_.reset(0.0);
+  filter_gyro_x_.reset(0.0);
+  filter_gyro_y_.reset(0.0);
+  filter_gyro_z_.reset(0.0);
+}
+
+void ImuFilter::updateFilterAcceleration(float acceleration_x, float acceleration_y, float acceleration_z)
+{
+  current_acceleration_x_ = filter_acceleration_x_.apply(acceleration_x);
+  current_acceleration_y_ = filter_acceleration_y_.apply(acceleration_y);
+  current_acceleration_z_ = filter_acceleration_z_.apply(acceleration_z);
+}
+
+void ImuFilter::updatefilterGyro(float gyro_x, float gyro_y, float gyri_z)
+{
+  current_gyro_x_ = filter_gyro_x_.apply(gyro_x);
+  current_gyro_y_ = filter_gyro_y_.apply(gyro_y);
+  current_gyro_z_ = filter_gyro_z_.apply(gyri_z);
+}
+
+geometry_msgs::Vector3 ImuFilter::getCurrentAccleration()
+{
+  geometry_msgs::Vector3 acceleration;
+  acceleration.x = current_acceleration_x_;
+  acceleration.y = current_acceleration_y_;
+  acceleration.z = current_acceleration_z_;
+  return acceleration;
+}
+
+geometry_msgs::Vector3 ImuFilter::getCurrentGyro()
+{
+  geometry_msgs::Vector3 gyro;
+  gyro.x = current_gyro_x_;
+  gyro.y = current_gyro_y_;
+  gyro.z = current_gyro_z_;
+  return gyro;
 }
 
 constexpr int ImuVn100::kBaseImuRate;
 constexpr int ImuVn100::kDefaultImuRate;
 constexpr int ImuVn100::kDefaultSyncOutRate;
+constexpr float ImuVn100::kDefaultCutoff;
 
 void ImuVn100::SyncInfo::Update(const unsigned sync_count,
                                 const ros::Time& sync_time) {
@@ -63,7 +116,7 @@ void ImuVn100::SyncInfo::FixSyncRate() {
     skip_count =
         (std::floor(ImuVn100::kBaseImuRate / static_cast<double>(rate) +
                     0.5f)) -
-        1;
+                    1;
 
     if (pulse_width_us > 10000) {
       ROS_INFO("Sync out pulse with is over 10ms. Reset to 1ms");
@@ -76,10 +129,10 @@ void ImuVn100::SyncInfo::FixSyncRate() {
 }
 
 ImuVn100::ImuVn100(const ros::NodeHandle& pnh)
-    : pnh_(pnh),
-      port_(std::string("/dev/ttyUSB0")),
-      baudrate_(921600),
-      frame_id_(std::string("imu")) {
+: pnh_(pnh),
+  port_(std::string("/dev/ttyUSB0")),
+  baudrate_(921600),
+  frame_id_(std::string("imu")) {
   Initialize();
   imu_vn_100_ptr = this;
 }
@@ -114,6 +167,7 @@ void ImuVn100::LoadParameters() {
   pnh_.param("sync_pulse_width_us", sync_info_.pulse_width_us, 1000);
 
   pnh_.param("binary_output", binary_output_, true);
+  pnh_.param("imu_cutoff_frequency", imu_cutoff_freq_, kDefaultCutoff);
 
   FixImuRate();
   sync_info_.FixSyncRate();
@@ -138,6 +192,9 @@ void ImuVn100::CreateDiagnosedPublishers() {
 
 void ImuVn100::Initialize() {
   LoadParameters();
+
+  // initialize filters
+  imuFilter_.initFilter(imu_rate_,imu_cutoff_freq_);
 
   ROS_DEBUG("Connecting to device");
   VnEnsure(vn100_connect(&imu_, port_.c_str(), 115200));
@@ -200,8 +257,9 @@ void ImuVn100::Initialize() {
   CreateDiagnosedPublishers();
 
   auto hardware_id = std::string("vn100-") + std::string(model_number_buffer) +
-                     std::string(serial_number_buffer);
+      std::string(serial_number_buffer);
   updater_.setHardwareID(hardware_id);
+
 }
 
 void ImuVn100::Stream(bool async) {
@@ -253,6 +311,11 @@ void ImuVn100::Disconnect() {
   // TODO: why reset the device?
   vn100_reset(&imu_);
   vn100_disconnect(&imu_);
+}
+
+void ImuVn100::applyImuFilter(const VnDeviceCompositeData& data) {
+  imuFilter_.updateFilterAcceleration(data.accelerationUncompensated.c0,data.accelerationUncompensated.c1,data.accelerationUncompensated.c2);
+  imuFilter_.updatefilterGyro(data.angularRateUncompensated.c0,data.angularRateUncompensated.c1,data.angularRateUncompensated.c2);
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
@@ -339,10 +402,14 @@ void FillImuMessage(sensor_msgs::Imu& imu_msg,
     RosQuaternionFromVnQuaternion(imu_msg.orientation, data.quaternion);
     // NOTE: The IMU angular velocity and linear acceleration outputs are
     // swapped. And also why are they different?
-    RosVector3FromVnVector3(imu_msg.angular_velocity,
-                            data.accelerationUncompensated);
-    RosVector3FromVnVector3(imu_msg.linear_acceleration,
-                            data.angularRateUncompensated);
+    imu_msg.linear_acceleration = imu_vn_100_ptr->imuFilter_.getCurrentAccleration();
+    imu_msg.angular_velocity = imu_vn_100_ptr->imuFilter_.getCurrentGyro();
+
+    //RosVector3FromVnVector3(imu_msg.angular_velocity,
+    //                        data.accelerationUncompensated);
+    //RosVector3FromVnVector3(imu_msg.linear_acceleration,
+    //                        data.angularRateUncompensated);
+
   } else {
     RosVector3FromVnVector3(imu_msg.linear_acceleration, data.acceleration);
     RosVector3FromVnVector3(imu_msg.angular_velocity, data.angularRate);

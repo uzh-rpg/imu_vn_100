@@ -26,6 +26,8 @@
 #include <sensor_msgs/Temperature.h>
 
 #include <vn100.h>
+#include <imu_vn_100/lowPassFilter2p.hpp>
+
 
 namespace imu_vn_100 {
 
@@ -56,15 +58,45 @@ struct DiagnosedPublisher {
   }
 };
 
+// RPG
+class ImuFilter
+{
+public:
+  ImuFilter()
+{ };
+
+  void initFilter(float sample_freq, float cutoff_freq);
+  void updateFilterAcceleration(float acceleration_x, float acceleration_y, float acceleration_z);
+  void updatefilterGyro(float gyro_x, float gyro_y, float gyri_z);
+  geometry_msgs::Vector3 getCurrentAccleration();
+  geometry_msgs::Vector3 getCurrentGyro();
+
+private:
+  math::LowPassFilter2p filter_acceleration_x_;
+  math::LowPassFilter2p filter_acceleration_y_;
+  math::LowPassFilter2p filter_acceleration_z_;
+  math::LowPassFilter2p filter_gyro_x_;
+  math::LowPassFilter2p filter_gyro_y_;
+  math::LowPassFilter2p filter_gyro_z_;
+
+  float current_acceleration_x_;
+  float current_acceleration_y_;
+  float current_acceleration_z_;
+  float current_gyro_x_;
+  float current_gyro_y_;
+  float current_gyro_z_;
+};
+
 /**
  * @brief ImuVn100 The class is a ros wrapper for the Imu class
  * @author Ke Sun
  */
 class ImuVn100 {
- public:
+public:
   static constexpr int kBaseImuRate = 800;
   static constexpr int kDefaultImuRate = 100;
   static constexpr int kDefaultSyncOutRate = 20;
+  static constexpr float kDefaultCutoff = 100;
 
   explicit ImuVn100(const ros::NodeHandle& pnh);
   ImuVn100(const ImuVn100&) = delete;
@@ -85,6 +117,8 @@ class ImuVn100 {
 
   void Disconnect();
 
+  void applyImuFilter(const VnDeviceCompositeData& data);
+
   void Configure();
 
   struct SyncInfo {
@@ -103,7 +137,8 @@ class ImuVn100 {
 
   const SyncInfo sync_info() const { return sync_info_; }
 
- private:
+  ImuFilter imuFilter_;
+private:
   ros::NodeHandle pnh_;
   Vn100 imu_;
 
@@ -113,6 +148,7 @@ class ImuVn100 {
   int imu_rate_ = kDefaultImuRate;
   double imu_rate_double_ = kDefaultImuRate;
   std::string frame_id_;
+  float imu_cutoff_freq_ = kDefaultCutoff;
 
   bool enable_mag_ = true;
   bool enable_pres_ = true;

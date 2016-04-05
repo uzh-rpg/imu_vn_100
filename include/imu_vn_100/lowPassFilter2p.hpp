@@ -45,6 +45,11 @@ namespace math
 class LowPassFilter2p
 {
 public:
+
+    // empty constructor
+    LowPassFilter2p() {
+
+    }
     // constructor
     LowPassFilter2p(float sample_freq, float cutoff_freq) {
         // set initial parameters
