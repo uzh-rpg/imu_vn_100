@@ -1,7 +1,7 @@
 cutoff_frequency: 25.0
-accelerometer_bias_x: 0.0
-accelerometer_bias_y: 0.0
-accelerometer_bias_z: 0.0
-gyro_bias_x: 0.0
-gyro_bias_y: 0.0
-gyro_bias_z: 0.0
+accelerometer_bias_x: 0.109  
+accelerometer_bias_y: 0.004
+accelerometer_bias_z: -0.094
+gyro_bias_x: -0.004   
+gyro_bias_y: 0.000
+gyro_bias_z: 0.008
