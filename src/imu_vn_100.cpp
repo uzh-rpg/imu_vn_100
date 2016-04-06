@@ -345,21 +345,14 @@ void ImuVn100::Disconnect() {
 }
 
 void ImuVn100::applyImuFilter(const VnDeviceCompositeData& data) {
-  // correct bias and apply filter
   // Attention: Acceleration and angular rates are swapped!
-//  imu_filter_.updateFilterAcceleration(data.angularRateUncompensated.c0 - accelerometer_bias_x_,
-//                                       data.angularRateUncompensated.c1 - accelerometer_bias_y_,
-//                                       data.angularRateUncompensated.c2 - accelerometer_bias_z_);
-//  imu_filter_.updatefilterGyro(data.accelerationUncompensated.c0 - gyro_bias_x_,
-//                               data.accelerationUncompensated.c1 - gyro_bias_y_,
-//                               data.accelerationUncompensated.c2 - gyro_bias_z_);
+  imu_filter_.updateFilterAcceleration(data.angularRateUncompensated.c0,
+                                       data.angularRateUncompensated.c1,
+                                       data.angularRateUncompensated.c2);
+  imu_filter_.updatefilterGyro(data.accelerationUncompensated.c0,
+                               data.accelerationUncompensated.c1,
+                               data.accelerationUncompensated.c2);
 
-  imu_filter_.updateFilterAcceleration(accelerometer_bias_x_,
-                                       accelerometer_bias_y_,
-                                       accelerometer_bias_z_);
-  imu_filter_.updatefilterGyro(gyro_bias_x_,
-                               gyro_bias_y_,
-                               gyro_bias_z_);
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
@@ -398,12 +391,24 @@ void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
 
 geometry_msgs::Vector3 ImuVn100::getFilteredAccelerationInBodyFrame()
 {
-  return rotateVector(rotation_body_imu_,imu_filter_.getCurrentAccleration());
+  geometry_msgs::Vector3 biased_acceleration = rotateVector(rotation_body_imu_,imu_filter_.getCurrentAccleration());
+  geometry_msgs::Vector3 unbiased_acceleration;
+  unbiased_acceleration.x = biased_acceleration.x - accelerometer_bias_x_;
+  unbiased_acceleration.y = biased_acceleration.y - accelerometer_bias_y_;
+  unbiased_acceleration.z = biased_acceleration.z - accelerometer_bias_z_;
+
+  return unbiased_acceleration;
 }
 
 geometry_msgs::Vector3 ImuVn100::getFilteredGyroInBodyFrame()
 {
-  return rotateVector(rotation_body_imu_,imu_filter_.getCurrentGyro());
+  geometry_msgs::Vector3 biased_gyro = rotateVector(rotation_body_imu_,imu_filter_.getCurrentGyro());
+  geometry_msgs::Vector3 unbiased_gyro;
+  unbiased_gyro.x = biased_gyro.x - gyro_bias_x_;
+  unbiased_gyro.y = biased_gyro.y - gyro_bias_y_;
+  unbiased_gyro.z = biased_gyro.z - gyro_bias_z_;
+
+  return unbiased_gyro;
 }
 
 void VnEnsure(const VnErrorCode& error_code) {
