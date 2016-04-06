@@ -347,12 +347,19 @@ void ImuVn100::Disconnect() {
 void ImuVn100::applyImuFilter(const VnDeviceCompositeData& data) {
   // correct bias and apply filter
   // Attention: Acceleration and angular rates are swapped!
-  imu_filter_.updateFilterAcceleration(data.angularRateUncompensated.c0 - accelerometer_bias_x_,
-                                       data.angularRateUncompensated.c1 - accelerometer_bias_y_,
-                                       data.angularRateUncompensated.c2 - accelerometer_bias_z_);
-  imu_filter_.updatefilterGyro(data.accelerationUncompensated.c0 - gyro_bias_x_,
-                               data.accelerationUncompensated.c1 - gyro_bias_y_,
-                               data.accelerationUncompensated.c2 - gyro_bias_z_);
+//  imu_filter_.updateFilterAcceleration(data.angularRateUncompensated.c0 - accelerometer_bias_x_,
+//                                       data.angularRateUncompensated.c1 - accelerometer_bias_y_,
+//                                       data.angularRateUncompensated.c2 - accelerometer_bias_z_);
+//  imu_filter_.updatefilterGyro(data.accelerationUncompensated.c0 - gyro_bias_x_,
+//                               data.accelerationUncompensated.c1 - gyro_bias_y_,
+//                               data.accelerationUncompensated.c2 - gyro_bias_z_);
+
+  imu_filter_.updateFilterAcceleration(accelerometer_bias_x_,
+                                       accelerometer_bias_y_,
+                                       accelerometer_bias_z_);
+  imu_filter_.updatefilterGyro(gyro_bias_x_,
+                               gyro_bias_y_,
+                               gyro_bias_z_);
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
