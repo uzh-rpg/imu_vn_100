@@ -161,6 +161,14 @@ private:
   // frame rotation
   VnMatrix3x3 rotation_body_imu_;
 
+  float accelerometer_bias_x_;
+  float accelerometer_bias_y_;
+  float accelerometer_bias_z_;
+
+  float gyro_bias_x_;
+  float gyro_bias_y_;
+  float gyro_bias_z_;
+
   SyncInfo sync_info_;
 
   du::Updater updater_;

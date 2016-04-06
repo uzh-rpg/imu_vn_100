@@ -181,6 +181,15 @@ void ImuVn100::LoadParameters() {
   pnh_.param("imu_cutoff_frequency", imu_cutoff_freq_, kDefaultCutoff);
   ROS_INFO("Cutoff is set to %f", imu_cutoff_freq_);
 
+
+  pnh_.param("accelerometer_bias_x", accelerometer_bias_x_, (float) 0.0);
+  pnh_.param("accelerometer_bias_y", accelerometer_bias_y_, (float) 0.0);
+  pnh_.param("accelerometer_bias_z", accelerometer_bias_z_, (float) 0.0);
+
+  pnh_.param("gyro_bias_x", gyro_bias_x_, (float) 0.0);
+  pnh_.param("gyro_bias_y", gyro_bias_y_, (float) 0.0);
+  pnh_.param("gyro_bias_z", gyro_bias_z_, (float) 0.0);
+
   pnh_.param("c00", rotation_body_imu_.c00, 1.0);
   pnh_.param("c01", rotation_body_imu_.c01, 0.0);
   pnh_.param("c02", rotation_body_imu_.c02, 0.0);
@@ -336,8 +345,14 @@ void ImuVn100::Disconnect() {
 }
 
 void ImuVn100::applyImuFilter(const VnDeviceCompositeData& data) {
-  imu_filter_.updateFilterAcceleration(data.accelerationUncompensated.c0,data.accelerationUncompensated.c1,data.accelerationUncompensated.c2);
-  imu_filter_.updatefilterGyro(data.angularRateUncompensated.c0,data.angularRateUncompensated.c1,data.angularRateUncompensated.c2);
+  // correct bias and apply filter
+  // Attention: Acceleration and angular rates are swapped!
+  imu_filter_.updateFilterAcceleration(data.angularRateUncompensated.c0 - accelerometer_bias_x_,
+                                       data.angularRateUncompensated.c1 - accelerometer_bias_y_,
+                                       data.angularRateUncompensated.c2 - accelerometer_bias_z_);
+  imu_filter_.updatefilterGyro(data.accelerationUncompensated.c0 - gyro_bias_x_,
+                               data.accelerationUncompensated.c1 - gyro_bias_y_,
+                               data.accelerationUncompensated.c2 - gyro_bias_z_);
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
