@@ -193,10 +193,9 @@ void ImuVn100::loadImuBiasesFromFile()
     yaml_file.close();
 
     // write current biases to file
-    writeBiasToFile();
   }
 
-  if(!baseNode.IsNull())
+  if(baseNode.IsDefined())
   {
     ROS_INFO("Reading bias values from .yaml file at %s", bias_storage_file_path_name_.c_str());
     accelerometer_bias_x_ = loadFloatFromYaml(baseNode, "accelerometer_bias_x", 0.0);
@@ -206,6 +205,9 @@ void ImuVn100::loadImuBiasesFromFile()
     gyro_bias_y_ = loadFloatFromYaml(baseNode, "gyro_bias_y", 0.0);
     gyro_bias_z_ = loadFloatFromYaml(baseNode, "gyro_bias_z", 0.0);
   }
+
+  // Safe the current biases in a file.
+  writeBiasToFile();
 
 }
 
