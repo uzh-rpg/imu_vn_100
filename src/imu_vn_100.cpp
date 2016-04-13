@@ -16,6 +16,7 @@
 
 #include <imu_vn_100/imu_vn_100.h>
 #include <yaml-cpp/yaml.h>
+#include <ros/package.h>
 
 namespace imu_vn_100 {
 
@@ -206,7 +207,8 @@ void ImuVn100::LoadParameters() {
   pnh_.param("c21", rotation_body_imu_.c21, 0.0);
   pnh_.param("c22", rotation_body_imu_.c22, -1.0);
 
-  std::string default_path = pnh_.getNamespace() + "/parameters/imu_params.yaml";
+  std::string path = ros::package::getPath("imu_vn_100");
+  std::string default_path = path + "/parameters/imu_params.yaml";
   pnh_.param("bias_storage_file_path_name", bias_storage_file_path_name_,default_path);
 
   FixImuRate();

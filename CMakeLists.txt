@@ -5,6 +5,7 @@ add_definitions("-std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  roslib
   sensor_msgs
   diagnostic_updater
   std_msgs
