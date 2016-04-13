@@ -231,10 +231,10 @@ bool ImuVn100::writeBiasToFile()
   std::ofstream bias_file;
   bias_file.open (bias_storage_file_path_name_.c_str(), std::ofstream::out | std::ofstream::trunc);
 
-  std::cout << "is NULL: " << baseNode.IsNull() << std::endl;
+  std::cout << "is NULL: " << baseNode.IsDefined() << std::endl;
   std::cout << "is open " << bias_file.is_open() << std::endl;
 
-  if((!baseNode.IsNull()) && bias_file.is_open())
+  if(baseNode.IsDefined() && bias_file.is_open())
   {
     writeFloatToYaml(baseNode, "accelerometer_bias_x", accelerometer_bias_x_);
     writeFloatToYaml(baseNode, "accelerometer_bias_y", accelerometer_bias_y_);
