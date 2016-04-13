@@ -1,0 +1,9 @@
+# Request
+std_msgs/Bool set_acc_bias
+geometry_msgs/Vector3 accelerometer_bias
+std_msgs/Bool set_gyro_bias
+geometry_msgs/Vector3 gyro_bias
+---
+# Answer
+std_msgs/Bool success
+

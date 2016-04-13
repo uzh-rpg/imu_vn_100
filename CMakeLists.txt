@@ -7,8 +7,23 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   diagnostic_updater
+  std_msgs
+  geometry_msgs
+  message_generation
 )
 find_package(Boost REQUIRED)
+
+add_service_files(
+  FILES
+  GetImuBias.srv
+  SetImuBias.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 
 catkin_package(
   INCLUDE_DIRS include vncpplib/include
@@ -22,7 +37,6 @@ include_directories(
   vncpplib/include
   ${catkin_INCLUDE_DIRS}
 )
-
 
 add_library(imu_vn_100
   vncpplib/src/arch/linux/vncp_services.c

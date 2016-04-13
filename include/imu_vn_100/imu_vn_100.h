@@ -27,7 +27,8 @@
 
 #include <vn100.h>
 #include <imu_vn_100/lowPassFilter2p.hpp>
-
+#include <imu_vn_100/GetImuBias.h>
+#include <imu_vn_100/SetImuBias.h>
 
 namespace imu_vn_100 {
 
@@ -173,7 +174,11 @@ private:
 
   du::Updater updater_;
   DiagnosedPublisher pd_imu_, pd_mag_, pd_pres_, pd_temp_;
+  ros::ServiceServer get_imu_bias_server_;
+  ros::ServiceServer set_imu_bias_server_;
 
+  bool getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasResponse & response);
+  bool setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response);
   void FixImuRate();
   void LoadParameters();
   void CreateDiagnosedPublishers();

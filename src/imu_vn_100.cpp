@@ -291,6 +291,10 @@ void ImuVn100::Initialize() {
       std::string(serial_number_buffer);
   updater_.setHardwareID(hardware_id);
 
+  get_imu_bias_server_ = pnh_.advertiseService("get_imu_bias",
+                                               &ImuVn100::getImuBiasCallback, this);
+  set_imu_bias_server_ = pnh_.advertiseService("set_imu_bias",
+                                               &ImuVn100::setImuBiasCallback, this);
 }
 
 void ImuVn100::Stream(bool async) {
@@ -409,6 +413,23 @@ geometry_msgs::Vector3 ImuVn100::getFilteredGyroInBodyFrame()
   unbiased_gyro.z = biased_gyro.z - gyro_bias_z_;
 
   return unbiased_gyro;
+}
+
+bool ImuVn100::getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasResponse & response)
+{
+  response.accelerometer_bias.x = accelerometer_bias_x_;
+  response.accelerometer_bias.y = accelerometer_bias_y_;
+  response.accelerometer_bias.z = accelerometer_bias_z_;
+
+  response.gyro_bias.x = gyro_bias_x_;
+  response.gyro_bias.y = gyro_bias_y_;
+  response.gyro_bias.z = gyro_bias_z_;
+  return true;
+}
+
+bool ImuVn100::setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response)
+{
+  return true;
 }
 
 void VnEnsure(const VnErrorCode& error_code) {

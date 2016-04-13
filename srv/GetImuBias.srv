@@ -1,0 +1,6 @@
+# Request
+std_msgs/Empty empty_message
+---
+# Answer
+geometry_msgs/Vector3 accelerometer_bias
+geometry_msgs/Vector3 gyro_bias
