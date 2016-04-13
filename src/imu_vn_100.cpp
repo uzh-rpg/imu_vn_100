@@ -393,9 +393,9 @@ void ImuVn100::Initialize() {
                                                &ImuVn100::getImuBiasCallback, this);
   set_imu_bias_server_ = pnh_.advertiseService("set_imu_bias",
                                                &ImuVn100::setImuBiasCallback, this);
-  get_imu_parameter_server_ = pnh_.advertiseService("get_imu_bias",
+  get_imu_parameter_server_ = pnh_.advertiseService("get_imu_parameter",
                                                     &ImuVn100::getImuParameterCallback, this);
-  set_imu_parameter_server_ = pnh_.advertiseService("set_imu_bias",
+  set_imu_parameter_server_ = pnh_.advertiseService("set_imu_parameter",
                                                     &ImuVn100::setImuParameterCallback, this);
 }
 
