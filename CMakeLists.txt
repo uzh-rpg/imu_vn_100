@@ -18,6 +18,8 @@ add_service_files(
   FILES
   GetImuBias.srv
   SetImuBias.srv
+  SetImuParameter.srv
+  GetImuParameter.srv
 )
 
 generate_messages(

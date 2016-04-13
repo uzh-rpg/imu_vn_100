@@ -393,6 +393,10 @@ void ImuVn100::Initialize() {
                                                &ImuVn100::getImuBiasCallback, this);
   set_imu_bias_server_ = pnh_.advertiseService("set_imu_bias",
                                                &ImuVn100::setImuBiasCallback, this);
+  get_imu_parameter_server_ = pnh_.advertiseService("get_imu_bias",
+                                                    &ImuVn100::getImuParameterCallback, this);
+  set_imu_parameter_server_ = pnh_.advertiseService("set_imu_bias",
+                                                    &ImuVn100::setImuParameterCallback, this);
 }
 
 void ImuVn100::Stream(bool async) {
@@ -542,6 +546,52 @@ bool ImuVn100::setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasRespons
   }
 
   response.success.data = writeBiasToFile();
+  return true;
+}
+
+bool ImuVn100::getImuParameterCallback(GetImuParameterRequest & request, GetImuParameterResponse & response)
+{
+
+  if(request.param_name.data == "accelerometer_bias_x")
+  {
+    response.is_available.data = true;
+    response.param_value.data = accelerometer_bias_x_;
+  }
+  else if(request.param_name.data == "accelerometer_bias_y")
+  {
+    response.is_available.data = true;
+    response.param_value.data = accelerometer_bias_y_;
+  }
+  else if(request.param_name.data == "accelerometer_bias_z")
+  {
+    response.is_available.data = true;
+    response.param_value.data = accelerometer_bias_z_;
+  }
+  else if(request.param_name.data == "gyro_bias_x")
+  {
+    response.is_available.data = true;
+    response.param_value.data = gyro_bias_x_;
+  }
+  else if(request.param_name.data == "gyro_bias_y")
+  {
+    response.is_available.data = true;
+    response.param_value.data = gyro_bias_y_;
+  }
+  else if(request.param_name.data == "gyro_bias_z")
+  {
+    response.is_available.data = true;
+    response.param_value.data = gyro_bias_z_;
+  }
+  else
+  {
+    response.is_available.data = false;
+  }
+
+  return true;
+}
+
+bool ImuVn100::setImuParameterCallback(SetImuParameterRequest & request, SetImuParameterResponse & response)
+{
   return true;
 }
 

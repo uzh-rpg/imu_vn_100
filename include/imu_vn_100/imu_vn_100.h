@@ -29,6 +29,8 @@
 #include <imu_vn_100/lowPassFilter2p.hpp>
 #include <imu_vn_100/GetImuBias.h>
 #include <imu_vn_100/SetImuBias.h>
+#include <imu_vn_100/GetImuParameter.h>
+#include <imu_vn_100/SetImuParameter.h>
 
 namespace imu_vn_100 {
 
@@ -178,10 +180,14 @@ private:
   DiagnosedPublisher pd_imu_, pd_mag_, pd_pres_, pd_temp_;
   ros::ServiceServer get_imu_bias_server_;
   ros::ServiceServer set_imu_bias_server_;
+  ros::ServiceServer get_imu_parameter_server_;
+  ros::ServiceServer set_imu_parameter_server_;
 
 
   bool getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasResponse & response);
   bool setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response);
+  bool getImuParameterCallback(GetImuParameterRequest & request, GetImuParameterResponse & response);
+  bool setImuParameterCallback(SetImuParameterRequest & request, SetImuParameterResponse & response);
   void loadImuBiasesFromFile();
   bool writeBiasToFile();
   void FixImuRate();
