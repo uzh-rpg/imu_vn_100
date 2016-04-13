@@ -183,7 +183,7 @@ private:
   bool getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasResponse & response);
   bool setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response);
   void loadImuBiasesFromFile();
-  void writeBiasToFile();
+  bool writeBiasToFile();
   void FixImuRate();
   void LoadParameters();
   void CreateDiagnosedPublishers();
