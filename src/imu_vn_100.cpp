@@ -175,8 +175,19 @@ void ImuVn100::loadImuBiasesFromFile()
 
   std::cout << "loading biases from file: " << bias_storage_file_path_name_ << std::endl;
 
-
-  YAML::Node baseNode = YAML::LoadFile(bias_storage_file_path_name_);
+  YAML::Node baseNode;
+  try
+  {
+    baseNode = YAML::LoadFile(bias_storage_file_path_name_);
+  }
+  catch(...)
+  {
+    std::cout << "Could not open yaml file" << std::endl;
+    // create new empty file.
+    std::ofstream yaml_file;
+    yaml_file.open(bias_storage_file_path_name_.c_str(),std::ofstream::out | std::ofstream::trunc);
+    yaml_file.close();
+  }
 
   std::cout << baseNode << std::endl;
 
