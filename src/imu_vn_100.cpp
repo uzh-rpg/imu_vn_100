@@ -15,6 +15,7 @@
  */
 
 #include <imu_vn_100/imu_vn_100.h>
+#include <yaml-cpp/yaml.h>
 
 namespace imu_vn_100 {
 
@@ -164,6 +165,11 @@ void ImuVn100::FixImuRate() {
   }
 }
 
+void ImuVn100::writeBiasToFile()
+{
+  std::cout << "file path is " << bias_storage_file_path_name_ << std::endl;
+}
+
 void ImuVn100::LoadParameters() {
   pnh_.param<std::string>("port", port_, std::string("/dev/ttyUSB0"));
   pnh_.param<std::string>("frame_id", frame_id_, pnh_.getNamespace());
@@ -199,6 +205,9 @@ void ImuVn100::LoadParameters() {
   pnh_.param("c20", rotation_body_imu_.c20, 0.0);
   pnh_.param("c21", rotation_body_imu_.c21, 0.0);
   pnh_.param("c22", rotation_body_imu_.c22, -1.0);
+
+  std::string default_path = pnh_.getNamespace() + "/parameters/imu_params.yaml";
+  pnh_.param("bias_storage_file_path_name", bias_storage_file_path_name_,default_path);
 
   FixImuRate();
   sync_info_.FixSyncRate();
@@ -444,6 +453,8 @@ bool ImuVn100::setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasRespons
   }
 
   response.success.data = true;
+
+  writeBiasToFile();
   return true;
 }
 

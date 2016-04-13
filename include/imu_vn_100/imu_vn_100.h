@@ -170,6 +170,8 @@ private:
   float gyro_bias_y_;
   float gyro_bias_z_;
 
+  std::string bias_storage_file_path_name_;
+
   SyncInfo sync_info_;
 
   du::Updater updater_;
@@ -179,6 +181,7 @@ private:
 
   bool getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasResponse & response);
   bool setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response);
+  void writeBiasToFile();
   void FixImuRate();
   void LoadParameters();
   void CreateDiagnosedPublishers();
