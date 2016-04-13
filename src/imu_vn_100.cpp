@@ -212,7 +212,7 @@ void ImuVn100::writeBiasToFile()
 {
   std::cout << "file path is " << bias_storage_file_path_name_ << std::endl;
 
-  YAML::Node baseNode = YAML::Load(bias_storage_file_path_name_);
+  YAML::Node baseNode = YAML::LoadFile(bias_storage_file_path_name_);
   writeFloatToYaml(baseNode,"accelerometer_bias_x",accelerometer_bias_x_);
   writeFloatToYaml(baseNode,"accelerometer_bias_y",accelerometer_bias_y_);
   writeFloatToYaml(baseNode,"accelerometer_bias_z",accelerometer_bias_z_);
