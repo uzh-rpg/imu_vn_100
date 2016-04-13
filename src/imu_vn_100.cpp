@@ -175,7 +175,12 @@ void ImuVn100::loadImuBiasesFromFile()
 
   std::cout << "loading biases from file: " << bias_storage_file_path_name_ << std::endl;
 
+
   YAML::Node baseNode = YAML::Load(bias_storage_file_path_name_);
+
+  std::cout << baseNode << std::endl;
+
+  std::cout << "printed node" << std::endl;
 
   std::cout << "created node" << std::endl;
   if (baseNode.IsNull())
