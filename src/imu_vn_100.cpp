@@ -172,9 +172,16 @@ void ImuVn100::FixImuRate() {
 
 void ImuVn100::loadImuBiasesFromFile()
 {
+
+  std::cout << "loading biases from file: " << bias_storage_file_path_name_ << std::endl;
+
   YAML::Node baseNode = YAML::Load(bias_storage_file_path_name_);
+
+  std::cout << "created node" << std::endl;
   if (baseNode.IsNull())
   {
+
+    std::cout << "node is empty" << std::endl;
     ROS_INFO("No accelerometer/gyro biases found. Setting biases to zero.");
     accelerometer_bias_x_ = 0.0;
     accelerometer_bias_y_ = 0.0;
@@ -185,12 +192,15 @@ void ImuVn100::loadImuBiasesFromFile()
   }
   else
   {
+    std::cout << "node is not empty" << std::endl;
     accelerometer_bias_x_ = loadFloatFromYaml(baseNode,"accelerometer_bias_x",0.0);
     accelerometer_bias_y_ = loadFloatFromYaml(baseNode,"accelerometer_bias_y",0.0);
     accelerometer_bias_z_ = loadFloatFromYaml(baseNode,"accelerometer_bias_z",0.0);
     gyro_bias_x_ = loadFloatFromYaml(baseNode,"gyro_bias_x",0.0);
     gyro_bias_y_ = loadFloatFromYaml(baseNode,"gyro_bias_y",0.0);
     gyro_bias_z_ = loadFloatFromYaml(baseNode,"gyro_bias_z",0.0);
+
+    std::cout << "loaded parameters" << std::endl;
   }
 }
 
