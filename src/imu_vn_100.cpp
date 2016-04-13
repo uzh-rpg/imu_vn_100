@@ -207,8 +207,20 @@ void ImuVn100::LoadParameters() {
   pnh_.param("c21", rotation_body_imu_.c21, 0.0);
   pnh_.param("c22", rotation_body_imu_.c22, -1.0);
 
-  std::string path = ros::package::getPath("imu_vn_100");
-  std::string default_path = path + "/parameters/imu_params.yaml";
+  std::string package_name = "imu_vn_100";
+  std::string package_path = ros::package::getPath(package_name);
+  std::string default_path;
+  if(package_path.empty())
+  {
+    ROS_ERROR("Could not find the package 'imu_vn_100'. Write parameters to /home/imu_params.yaml");
+    default_path = "/home/imu_params.yaml";
+  }
+  else
+  {
+    default_path = package_path + "parameters/imu_params.yaml";
+    ROS_INFO("Imu biases will be stored to %s",default_path.c_str());
+  }
+
   pnh_.param("bias_storage_file_path_name", bias_storage_file_path_name_,default_path);
 
   FixImuRate();
