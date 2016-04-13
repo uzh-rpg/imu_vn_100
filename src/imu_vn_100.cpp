@@ -429,6 +429,21 @@ bool ImuVn100::getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasRespons
 
 bool ImuVn100::setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response)
 {
+  if(request.set_acc_bias.data)
+  {
+    accelerometer_bias_x_ = request.accelerometer_bias.x;
+    accelerometer_bias_y_ = request.accelerometer_bias.y;
+    accelerometer_bias_z_ = request.accelerometer_bias.z;
+  }
+
+  if(request.set_gyro_bias.data)
+  {
+    gyro_bias_x_ = request.gyro_bias.x;
+    gyro_bias_y_ = request.gyro_bias.y;
+    gyro_bias_z_ = request.gyro_bias.z;
+  }
+
+  response.success.data = true;
   return true;
 }
 
