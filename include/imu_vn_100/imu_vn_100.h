@@ -179,8 +179,10 @@ private:
   ros::ServiceServer get_imu_bias_server_;
   ros::ServiceServer set_imu_bias_server_;
 
+
   bool getImuBiasCallback(GetImuBiasRequest & request, GetImuBiasResponse & response);
   bool setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasResponse & response);
+  void loadImuBiasesFromFile();
   void writeBiasToFile();
   void FixImuRate();
   void LoadParameters();

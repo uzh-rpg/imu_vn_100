@@ -24,12 +24,12 @@ namespace imu_vn_100 {
 // LESS HACK IS STILL HACK
 ImuVn100* imu_vn_100_ptr;
 
-
-
 using sensor_msgs::Imu;
 using sensor_msgs::MagneticField;
 using sensor_msgs::FluidPressure;
 using sensor_msgs::Temperature;
+
+
 
 void RosVector3FromVnVector3(geometry_msgs::Vector3& ros_vec3,
                              const VnVector3& vn_vec3);
@@ -37,6 +37,9 @@ void RosQuaternionFromVnQuaternion(geometry_msgs::Quaternion& ros_quat,
                                    const VnQuaternion& vn_quat);
 void FillImuMessage(sensor_msgs::Imu& imu_msg,
                     const VnDeviceCompositeData& data, bool binary_output);
+
+float loadFloatFromYaml(const YAML::Node& baseNode,const std::string& param_name, const float& default_value);
+void writeFloatToYaml(YAML::Node& baseNode, const std::string& param_name, const float& param_value, bool create_new_node_if_needed=true);
 
 geometry_msgs::Vector3 rotateVector(const VnMatrix3x3 rotation_Matrix, const geometry_msgs::Vector3 input_vector)
 {
@@ -167,35 +170,47 @@ void ImuVn100::FixImuRate() {
   }
 }
 
+void ImuVn100::loadImuBiasesFromFile()
+{
+  YAML::Node baseNode = YAML::Load(bias_storage_file_path_name_);
+  if (baseNode.IsNull())
+  {
+    ROS_INFO("No accelerometer/gyro biases found. Setting biases to zero.");
+    accelerometer_bias_x_ = 0.0;
+    accelerometer_bias_y_ = 0.0;
+    accelerometer_bias_z_ = 0.0;
+    gyro_bias_x_ = 0.0;
+    gyro_bias_y_ = 0.0;
+    gyro_bias_z_ = 0.0;
+  }
+  else
+  {
+    accelerometer_bias_x_ = loadFloatFromYaml(baseNode,"accelerometer_bias_x",0.0);
+    accelerometer_bias_y_ = loadFloatFromYaml(baseNode,"accelerometer_bias_y",0.0);
+    accelerometer_bias_z_ = loadFloatFromYaml(baseNode,"accelerometer_bias_z",0.0);
+    gyro_bias_x_ = loadFloatFromYaml(baseNode,"gyro_bias_x",0.0);
+    gyro_bias_y_ = loadFloatFromYaml(baseNode,"gyro_bias_y",0.0);
+    gyro_bias_z_ = loadFloatFromYaml(baseNode,"gyro_bias_z",0.0);
+  }
+}
+
 void ImuVn100::writeBiasToFile()
 {
   std::cout << "file path is " << bias_storage_file_path_name_ << std::endl;
 
   YAML::Node baseNode = YAML::Load(bias_storage_file_path_name_);
-  if (baseNode.IsNull())
-  {
-    // no file present. write default file with only biases.
-  }
-  else
-  {
-    // change bias values in existing file and write again.
-    YAML::Node bias_element = baseNode["accelerometer_bias_x"];
-    if (bias_element.IsNull())
-    {
-      //add new element
-    }
-    else
-    {
-      //modify existing value
-      baseNode["accelerometer_bias_x"] = accelerometer_bias_x_;
-    }
-  }
+  writeFloatToYaml(baseNode,"accelerometer_bias_x",accelerometer_bias_x_);
+  writeFloatToYaml(baseNode,"accelerometer_bias_y",accelerometer_bias_y_);
+  writeFloatToYaml(baseNode,"accelerometer_bias_z",accelerometer_bias_z_);
+  writeFloatToYaml(baseNode,"gyro_bias_x",gyro_bias_x_);
+  writeFloatToYaml(baseNode,"gyro_bias_y",gyro_bias_y_);
+  writeFloatToYaml(baseNode,"gyro_bias_z",gyro_bias_z_);
+
 
   std::ofstream bias_file;
   bias_file.open (bias_storage_file_path_name_.c_str(), std::ofstream::out | std::ofstream::trunc);
 
   bias_file << baseNode;
-
   bias_file.close();
 }
 
@@ -216,15 +231,6 @@ void ImuVn100::LoadParameters() {
   pnh_.param("imu_cutoff_frequency", imu_cutoff_freq_, kDefaultCutoff);
   ROS_INFO("Cutoff is set to %f", imu_cutoff_freq_);
 
-
-  pnh_.param("accelerometer_bias_x", accelerometer_bias_x_, (float) 0.0);
-  pnh_.param("accelerometer_bias_y", accelerometer_bias_y_, (float) 0.0);
-  pnh_.param("accelerometer_bias_z", accelerometer_bias_z_, (float) 0.0);
-
-  pnh_.param("gyro_bias_x", gyro_bias_x_, (float) 0.0);
-  pnh_.param("gyro_bias_y", gyro_bias_y_, (float) 0.0);
-  pnh_.param("gyro_bias_z", gyro_bias_z_, (float) 0.0);
-
   pnh_.param("c00", rotation_body_imu_.c00, 1.0);
   pnh_.param("c01", rotation_body_imu_.c01, 0.0);
   pnh_.param("c02", rotation_body_imu_.c02, 0.0);
@@ -241,15 +247,17 @@ void ImuVn100::LoadParameters() {
   if(package_path.empty())
   {
     ROS_ERROR("Could not find the package 'imu_vn_100'. Write parameters to /home/imu_params.yaml");
-    default_path = "/home/imu_params.yaml";
+    default_path = "/home/imu_biases.yaml";
   }
   else
   {
-    default_path = package_path + "/parameters/imu_params.yaml";
+    default_path = package_path + "/parameters/imu_biases.yaml";
     ROS_INFO("Imu biases will be stored to %s",default_path.c_str());
   }
 
   pnh_.param("bias_storage_file_path_name", bias_storage_file_path_name_,default_path);
+
+  loadImuBiasesFromFile();
 
   FixImuRate();
   sync_info_.FixSyncRate();
@@ -561,6 +569,31 @@ void FillImuMessage(sensor_msgs::Imu& imu_msg,
   } else {
     RosVector3FromVnVector3(imu_msg.linear_acceleration, data.acceleration);
     RosVector3FromVnVector3(imu_msg.angular_velocity, data.angularRate);
+  }
+}
+
+float loadFloatFromYaml(const YAML::Node& baseNode,const std::string& param_name, const float& default_value)
+{
+  // change bias values in existing file and write again.
+  YAML::Node bias_element = baseNode[param_name];
+  if (bias_element.IsNull())
+  {
+    return default_value;
+  }
+  else
+  {
+    //modify existing value
+    return bias_element.as<float>();
+  }
+}
+
+void writeFloatToYaml(YAML::Node& baseNode, const std::string& param_name, const float& param_value, bool create_new_node_if_needed)
+{
+  // change bias values in existing file and write again.
+  YAML::Node bias_element = baseNode[param_name];
+  if ((!bias_element.IsNull()) || (bias_element.IsNull() && create_new_node_if_needed))
+  {
+    baseNode[param_name] = param_value;
   }
 }
 
