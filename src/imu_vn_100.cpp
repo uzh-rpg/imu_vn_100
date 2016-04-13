@@ -591,11 +591,11 @@ float loadFloatFromYaml(const YAML::Node& baseNode,const std::string& param_name
 {
   // change bias values in existing file and write again.
   std::cout << "load float from yaml" << std::endl;
-  if (true)
+  if (baseNode["accelerometer_bias_x"])
   {
     std::cout << "reading the value" << std::endl;
     //modify existing value
-    return baseNode["acceleromter_bias_x"].as<float>();
+    return baseNode["accelerometer_bias_x"].as<float>();
   }
   else
   {
