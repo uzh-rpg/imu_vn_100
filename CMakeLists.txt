@@ -47,7 +47,7 @@ add_library(imu_vn_100
   src/imu_vn_100.cpp
 )
 target_link_libraries(imu_vn_100
-  ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES} yaml-cpp
 )
 add_dependencies(imu_vn_100
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -59,6 +59,7 @@ add_executable(imu_vn_100_cont_node
 target_link_libraries(imu_vn_100_cont_node
   ${catkin_LIBRARIES}
   imu_vn_100
+  yaml-cpp
 )
 add_dependencies(imu_vn_100_cont_node
   ${${PROJECT_NAME}_EXPORTED_TARGETS}

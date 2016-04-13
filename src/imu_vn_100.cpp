@@ -17,6 +17,7 @@
 #include <imu_vn_100/imu_vn_100.h>
 #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
+#include <fstream>
 
 namespace imu_vn_100 {
 
@@ -169,6 +170,33 @@ void ImuVn100::FixImuRate() {
 void ImuVn100::writeBiasToFile()
 {
   std::cout << "file path is " << bias_storage_file_path_name_ << std::endl;
+
+  YAML::Node baseNode = YAML::Load(bias_storage_file_path_name_);
+  if (baseNode.IsNull())
+  {
+    // no file present. write default file with only biases.
+  }
+  else
+  {
+    // change bias values in existing file and write again.
+    YAML::Node bias_element = baseNode["accelerometer_bias_x"];
+    if (bias_element.IsNull())
+    {
+      //add new element
+    }
+    else
+    {
+      //modify existing value
+      baseNode["accelerometer_bias_x"] = accelerometer_bias_x_;
+    }
+  }
+
+  std::ofstream bias_file;
+  bias_file.open (bias_storage_file_path_name_.c_str(), std::ofstream::out | std::ofstream::trunc);
+
+  bias_file << baseNode;
+
+  bias_file.close();
 }
 
 void ImuVn100::LoadParameters() {
@@ -217,7 +245,7 @@ void ImuVn100::LoadParameters() {
   }
   else
   {
-    default_path = package_path + "parameters/imu_params.yaml";
+    default_path = package_path + "/parameters/imu_params.yaml";
     ROS_INFO("Imu biases will be stored to %s",default_path.c_str());
   }
 
