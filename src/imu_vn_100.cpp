@@ -585,19 +585,18 @@ void FillImuMessage(sensor_msgs::Imu& imu_msg,
 float loadFloatFromYaml(const YAML::Node& baseNode,const std::string& param_name, const float& default_value)
 {
   // change bias values in existing file and write again.
-  YAML::Node bias_element = baseNode[param_name];
-
-  std::cout << "tried to make element node" << std::endl;
-  if (bias_element.IsNull())
-  {
-    std::cout << "element is empty" << std::endl;
-    return default_value;
-  }
-  else
+  std::cout << "load float from yaml" << std::endl;
+  if (baseNode[param_name])
   {
     std::cout << "reading the value" << std::endl;
     //modify existing value
-    return bias_element.as<float>();
+    return baseNode[param_name].as<float>();
+  }
+  else
+  {
+    std::cout << "element is empty" << std::endl;
+    return default_value;
+
   }
 }
 
