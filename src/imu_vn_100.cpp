@@ -185,7 +185,6 @@ void ImuVn100::loadImuBiasesFromFile()
   std::cout << "created node" << std::endl;
   if (baseNode.IsNull())
   {
-
     std::cout << "node is empty" << std::endl;
     ROS_INFO("No accelerometer/gyro biases found. Setting biases to zero.");
     accelerometer_bias_x_ = 0.0;
@@ -591,11 +590,11 @@ float loadFloatFromYaml(const YAML::Node& baseNode,const std::string& param_name
 {
   // change bias values in existing file and write again.
   std::cout << "load float from yaml" << std::endl;
-  if (baseNode["accelerometer_bias_x"])
+  if (baseNode[param_name])
   {
     std::cout << "reading the value" << std::endl;
     //modify existing value
-    return baseNode["accelerometer_bias_x"].as<float>();
+    return baseNode[param_name].as<float>();
   }
   else
   {
