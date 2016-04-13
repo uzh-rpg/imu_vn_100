@@ -551,7 +551,6 @@ bool ImuVn100::setImuBiasCallback(SetImuBiasRequest & request, SetImuBiasRespons
 
 bool ImuVn100::getImuParameterCallback(GetImuParameterRequest & request, GetImuParameterResponse & response)
 {
-
   if(request.param_name.data == "accelerometer_bias_x")
   {
     response.is_available.data = true;
@@ -592,6 +591,42 @@ bool ImuVn100::getImuParameterCallback(GetImuParameterRequest & request, GetImuP
 
 bool ImuVn100::setImuParameterCallback(SetImuParameterRequest & request, SetImuParameterResponse & response)
 {
+  if(request.param_name.data == "accelerometer_bias_x")
+  {
+    response.success.data = true;
+    accelerometer_bias_x_ = request.param_value.data;
+  }
+  else if(request.param_name.data == "accelerometer_bias_y")
+  {
+    response.success.data = true;
+    accelerometer_bias_y_ = request.param_value.data;
+  }
+  else if(request.param_name.data == "accelerometer_bias_z")
+  {
+    response.success.data = true;
+    accelerometer_bias_z_ = request.param_value.data;
+  }
+  else if(request.param_name.data == "gyro_bias_x")
+  {
+    response.success.data = true;
+    gyro_bias_x_ = request.param_value.data;
+  }
+  else if(request.param_name.data == "gyro_bias_y")
+  {
+    response.success.data = true;
+    gyro_bias_y_ = request.param_value.data;
+  }
+  else if(request.param_name.data == "gyro_bias_z")
+  {
+    response.success.data = true;
+    gyro_bias_z_ = request.param_value.data;
+  }
+  else
+  {
+    response.success.data = false;
+  }
+
+  writeBiasToFile();
   return true;
 }
 
