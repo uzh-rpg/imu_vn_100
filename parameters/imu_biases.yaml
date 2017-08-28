@@ -1,0 +1,6 @@
+gyro_bias_z: 0.012
+gyro_bias_x: -0.0075
+accelerometer_bias_x: -0.02502568
+accelerometer_bias_y: -0.08945602
+accelerometer_bias_z: -0.09488361
+gyro_bias_y: 0.0004713983
