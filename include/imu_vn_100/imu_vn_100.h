@@ -96,7 +96,8 @@ class ImuVn100 {
     int pulse_width_us = 1000;
     int skip_count = 0;
 
-    void Update(const unsigned sync_count, const ros::Time& sync_time);
+    //void Update(const unsigned sync_count, const ros::Time& sync_time);
+    void Update(const ros::Time& sync_time);
     void FixSyncRate();
     bool SyncEnabled() const;
   };

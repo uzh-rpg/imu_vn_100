@@ -41,12 +41,14 @@ constexpr int ImuVn100::kBaseImuRate;
 constexpr int ImuVn100::kDefaultImuRate;
 constexpr int ImuVn100::kDefaultSyncOutRate;
 
-void ImuVn100::SyncInfo::Update(const unsigned sync_count,
-                                const ros::Time& sync_time) {
+// void ImuVn100::SyncInfo::Update(const unsigned sync_count,
+//                                 const ros::Time& sync_time) {
+void ImuVn100::SyncInfo::Update(const ros::Time& sync_time) {
   if (rate <= 0) return;
 
-  if (count != sync_count) {
-    count = sync_count;
+  // if (count != sync_count) {
+  if (++count > skip_count) {
+    count = 0;
     time = sync_time;
   }
 }
@@ -64,6 +66,7 @@ void ImuVn100::SyncInfo::FixSyncRate() {
         (std::floor(ImuVn100::kBaseImuRate / static_cast<double>(rate) +
                     0.5f)) -
         1;
+    ROS_INFO_STREAM("Set skip_count to " << skip_count);
 
     if (pulse_width_us > 10000) {
       ROS_INFO("Sync out pulse with is over 10ms. Reset to 1ms");
@@ -284,7 +287,8 @@ void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
     pd_temp_.Publish(temp_msg);
   }
 
-  sync_info_.Update(data.syncInCnt, imu_msg.header.stamp);
+  //sync_info_.Update(data.syncInCnt, imu_msg.header.stamp);
+  sync_info_.Update(imu_msg.header.stamp);
 
   updater_.update();
 }
