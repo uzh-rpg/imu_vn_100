@@ -17,6 +17,7 @@
 #include <imu_vn_100/imu_vn_100.h>
 
 #include <geometry_msgs/Vector3Stamped.h>
+#include <std_msgs/Int64.h>
 
 namespace imu_vn_100 {
 
@@ -81,9 +82,12 @@ ImuVn100::ImuVn100(const ros::NodeHandle& pnh)
     : pnh_(pnh),
       port_(std::string("/dev/ttyUSB0")),
       baudrate_(921600),
-      frame_id_(std::string("imu")) {
+      frame_id_(std::string("imu")),
+      startup_time_ns_(ros::Time::now().toNSec())
+{
   Initialize();
   imu_vn_100_ptr = this;
+  //last_timestamp_ = ros::Time::now();
 }
 
 ImuVn100::~ImuVn100() { Disconnect(); }
@@ -326,8 +330,8 @@ void ImuVn100::Stream(bool async) {
 
     if (binary_output_) {
       // Set the binary output data type and data rate
-      uint16_t grp1 = BG1_QTN | BG1_SYNC_IN_CNT;
-      std::list<std::string> sgrp1 = {"BG1_QTN", "BG1_SYNC_IN_CNT"};
+      uint16_t grp1 = BG1_QTN | BG1_SYNC_IN_CNT | BG1_TIME_STARTUP;
+      std::list<std::string> sgrp1 = {"BG1_QTN", "BG1_SYNC_IN_CNT", "BG1_TIME_STARTUP"};
       if (enable_rpy_) {
         grp1 |= BG1_YPR;
         sgrp1.push_back("BG1_YPR");
@@ -438,8 +442,26 @@ void ImuVn100::Disconnect() {
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
+  /*
+  ros::Time current_stamp = ros::Time::now();
+  std_msgs::Int64 delta_t_msg;
+  delta_t_msg.data  = (current_stamp - last_timestamp_).toNSec();
+  last_timestamp_ = current_stamp;
+  static ros::Publisher delta_pub = pnh_.advertise<std_msgs::Int64>("delta_t",1);
+  delta_pub.publish(delta_t_msg);
+  */
+
+  ros::Time current_stamp;
+  current_stamp.fromNSec(startup_time_ns_+data.timeStartup);
+
+  std_msgs::Int64 imu_delta_t_msg;
+  imu_delta_t_msg.data = current_stamp.toNSec() - last_imu_stamp_;
+  last_imu_stamp_ = current_stamp.toNSec();
+  static ros::Publisher imu_delta_pub = pnh_.advertise<std_msgs::Int64>("imu_delta_t",800);
+  imu_delta_pub.publish(imu_delta_t_msg);
+
   sensor_msgs::Imu imu_msg;
-  imu_msg.header.stamp = ros::Time::now();
+  imu_msg.header.stamp = current_stamp;
   imu_msg.header.frame_id = frame_id_;
 
   if (imu_compensated_) {
