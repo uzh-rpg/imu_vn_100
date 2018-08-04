@@ -146,7 +146,6 @@ class ImuVn100 {
   void LoadParameters();
   void CreateDiagnosedPublishers();
 
-  // ros::Time last_timestamp_;
   uint64_t last_imu_stamp_;
   uint64_t startup_time_ns_;
 };

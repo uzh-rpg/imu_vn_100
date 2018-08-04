@@ -17,7 +17,6 @@
 #include <imu_vn_100/imu_vn_100.h>
 
 #include <geometry_msgs/Vector3Stamped.h>
-#include <std_msgs/Int64.h>
 
 namespace imu_vn_100 {
 
@@ -87,7 +86,6 @@ ImuVn100::ImuVn100(const ros::NodeHandle& pnh)
 {
   Initialize();
   imu_vn_100_ptr = this;
-  //last_timestamp_ = ros::Time::now();
 }
 
 ImuVn100::~ImuVn100() { Disconnect(); }
@@ -423,6 +421,7 @@ void ImuVn100::Stream(bool async) {
     VnEnsure(vn100_unregisterAsyncDataReceivedListener(&imu_, &AsyncListener));
   }
 
+  startup_time_ns_ = ros::Time::now().toNSec();
   // Resume the device
   VnEnsure(vn100_resumeAsyncOutputs(&imu_, true));
 }
@@ -442,23 +441,8 @@ void ImuVn100::Disconnect() {
 }
 
 void ImuVn100::PublishData(const VnDeviceCompositeData& data) {
-  /*
-  ros::Time current_stamp = ros::Time::now();
-  std_msgs::Int64 delta_t_msg;
-  delta_t_msg.data  = (current_stamp - last_timestamp_).toNSec();
-  last_timestamp_ = current_stamp;
-  static ros::Publisher delta_pub = pnh_.advertise<std_msgs::Int64>("delta_t",1);
-  delta_pub.publish(delta_t_msg);
-  */
-
   ros::Time current_stamp;
   current_stamp.fromNSec(startup_time_ns_+data.timeStartup);
-
-  std_msgs::Int64 imu_delta_t_msg;
-  imu_delta_t_msg.data = current_stamp.toNSec() - last_imu_stamp_;
-  last_imu_stamp_ = current_stamp.toNSec();
-  static ros::Publisher imu_delta_pub = pnh_.advertise<std_msgs::Int64>("imu_delta_t",800);
-  imu_delta_pub.publish(imu_delta_t_msg);
 
   sensor_msgs::Imu imu_msg;
   imu_msg.header.stamp = current_stamp;
